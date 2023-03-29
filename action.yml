@@ -50,6 +50,12 @@ inputs:
       'Whether to configure the token or SSH key with the local git config
     required: false
     default: true
+  shell:
+    description: >
+      Shell setting to use when executing run steps e.g. sh, cmd.
+      See [github docs](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell) for available parameters
+    required: false
+    default: "bash"
 
 runs:
   using: "composite"
@@ -69,7 +75,7 @@ runs:
         git lfs ls-files --long --include  "${{ inputs.include }}" --exclude  "${{ inputs.exclude }}" | cut -d ' ' -f1 > .lfs-assets-id-unsorted
         git submodule foreach git lfs ls-files --long --include  "${{ inputs.include }}" --exclude  "${{ inputs.exclude }}" | cut -d ' ' -f1 >> .lfs-assets-id-unsorted
         cat .lfs-assets-id-unsorted | sort > .lfs-assets-id
-      shell: bash
+      shell: ${{ inputs.shell }}
 
     - name: Create Submodule LFS Cache Paths
       run: |
@@ -84,7 +90,7 @@ runs:
 
         echo "CACHE_PATHS=$CACHE_PATHS" >> $GITHUB_OUTPUT
       id: cache-paths
-      shell: bash
+      shell: ${{ inputs.shell }}
 
     - name: Restore LFS cache
       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
@@ -99,11 +105,11 @@ runs:
       run: |
         git lfs pull --include  "${{ inputs.include }}" --exclude  "${{ inputs.exclude }}"
         git submodule foreach git lfs pull --include  "${{ inputs.include }}" --exclude  "${{ inputs.exclude }}"
-      shell: bash
+      shell: ${{ inputs.shell }}
 
     # Don't leave behind temp files in case build system checks for dirty workspace
     - name: Cleanup Temp Files
       run: |
         rm .lfs-assets-id-unsorted
         rm .lfs-assets-id
-      shell: bash
+      shell: ${{ inputs.shell }}
